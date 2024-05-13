@@ -7,7 +7,7 @@ from config.config import settings
 class InfoDetection:
     def __init__(self):
         self.device = torch.device('cpu')
-        self.model = (AutoModelForSequenceClassification.from_pretrained(settings.info_detection_model_path, num_labels=2)
+        self.model = (AutoModelForSequenceClassification.from_pretrained(settings.info_detection_model_path, num_labels=2, )
                       .to(self.device))
         self.tokenizer = AutoTokenizer.from_pretrained(settings.pretrained_tokenizer)
 
