@@ -42,6 +42,7 @@ def evaluate_texts(texts, tokenizer, device, model):
 
 
 def sentence_predict(sentence, tokenizer, device, model):
+    time1 = time.time()
     model.eval()
     tokenized_sent = tokenizer(
         sentence,
@@ -52,7 +53,7 @@ def sentence_predict(sentence, tokenizer, device, model):
     )
 
     tokenized_sent.to(device)
-
+    print("tokenizer init : ", time.time() - time1)
     with torch.no_grad():
         outputs = model(
             input_ids=tokenized_sent["input_ids"],
