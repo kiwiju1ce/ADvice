@@ -1,3 +1,5 @@
+import time
+
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
@@ -30,11 +32,12 @@ class TextAdDetection:
 
 
 def evaluate_texts(texts, tokenizer, device, model):
+    start = time.time()
     results = []
     for text in texts:
         print(len(texts) , " 길이의 문장 처리 중 : " , len(text))
         results.append(sentence_predict(text, tokenizer, device, model))
-
+    print(len(texts), " 길이의 문장 처리 끝 : ", time.time() - start)
     return results
 
 
