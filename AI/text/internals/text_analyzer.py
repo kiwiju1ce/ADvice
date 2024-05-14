@@ -14,7 +14,7 @@ class InfoDetection:
         self.tokenizer = AutoTokenizer.from_pretrained(settings.pretrained_tokenizer)
 
     def detect(self, text):
-        return evaluate_texts(text, self.tokenizer, self.device, self.model)
+        return evaluate_obj(text, self.tokenizer, self.device, self.model)
 
 
 class TextAdDetection:
@@ -35,13 +35,23 @@ def evaluate_texts(texts, tokenizer, device, model):
     start = time.time()
     results = []
     for text in texts:
-        print(len(texts) , " 길이의 문장 처리 중 : " , len(text))
+        print(len(texts) , " 길이의 ad 문장 처리 중 : " , len(text))
         results.append(sentence_predict(text, tokenizer, device, model))
-    print(len(texts), " 길이의 문장 처리 끝 : ", time.time() - start)
+    print(len(texts), " 길이의 ad 문장 처리 끝 : ", time.time() - start)
+    return results
+
+def evaluate_obj(texts, tokenizer, device, model):
+    start = time.time()
+    results = []
+    for text in texts:
+        print(len(texts) , " 길이의 obj 문장 처리 중 : " , len(text))
+        results.append(obj_predict(text, tokenizer, device, model))
+    print(len(texts), " 길이의 obj 문장 처리 끝 : ", time.time() - start)
     return results
 
 
 def sentence_predict(sentence, tokenizer, device, model):
+    time1 = time.time()
     model.eval()
     tokenized_sent = tokenizer(
         sentence,
@@ -52,12 +62,33 @@ def sentence_predict(sentence, tokenizer, device, model):
     )
 
     tokenized_sent.to(device)
-
+    print("tokenizer init : ", time.time() - time1)
     with torch.no_grad():
         outputs = model(
             input_ids=tokenized_sent["input_ids"],
             attention_mask=tokenized_sent["attention_mask"],
             token_type_ids=tokenized_sent["token_type_ids"]
+        )
+
+    logits = outputs[0]
+    logits = logits.detach().cpu()
+    return 1 if logits.argmax(-1) == 1 else 0
+
+def obj_predict(sentence, tokenizer, device, model):
+    model.eval()
+    tokenized_sent = tokenizer(
+        sentence,
+        return_tensors="pt",
+        truncation=True,
+        add_special_tokens=True,
+        max_length=128
+    )
+
+    tokenized_sent.to(device)
+    with torch.no_grad():
+        outputs = model(
+            input_ids=tokenized_sent["input_ids"],
+            attention_mask=tokenized_sent["attention_mask"],
         )
 
     logits = outputs[0]
