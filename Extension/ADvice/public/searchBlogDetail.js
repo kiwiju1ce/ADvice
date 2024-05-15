@@ -287,6 +287,7 @@ function optionFive(crawlResults) {
 }
 
 function optionSeven(crawlResults, iframeDoc) {
+  console.log("optionSeven", selectedBadOption, selectedGoodOption)
   return new Promise((resolve, reject) => {
     if (selectedGoodOption.includes(7) || selectedBadOption.includes(7)) {
       chrome.runtime.sendMessage(
@@ -393,6 +394,7 @@ function optionEight() {
 }
 
 function checkOption() {
+  console.log("checkOption", optionCnt)
   if (optionCnt === 2) {
     var checkInterval = setInterval(function () {
       var iframeDoc = iframe.contentWindow.document;
@@ -446,6 +448,7 @@ function checkOption() {
         optionPromises.push(optionEight(crawlResults));
 
         Promise.all(optionPromises).then(() => {
+          console.log("Blog - Promise.all 시작")
           finalResult = processData(tmpData);
           console.log(finalResult);
           Object.keys(finalResult).forEach((id) => {
@@ -475,6 +478,7 @@ function checkOption() {
               element.innerHTML = html;
             }
           });
+          console.log("Blog - Promise.all 종료")
         });
       }
     }, 100);
