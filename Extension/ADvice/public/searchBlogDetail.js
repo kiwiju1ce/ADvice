@@ -287,6 +287,7 @@ function optionFive(crawlResults) {
 }
 
 function optionSeven(crawlResults, iframeDoc) {
+  console.log("optionSeven", selectedBadOption, selectedGoodOption)
   return new Promise((resolve, reject) => {
     if (selectedGoodOption.includes(7) || selectedBadOption.includes(7)) {
       chrome.runtime.sendMessage(
@@ -393,6 +394,61 @@ function optionEight() {
 }
 
 function checkOption() {
+  // 스피너 삽입
+  function injectSpinner() {
+    const spinnerContainer = document.createElement('div');
+    spinnerContainer.id = 'spinner-container';
+  
+    const spinnerStyle = document.createElement('style');
+    spinnerStyle.textContent = `
+      .spinner-overlay {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+      }
+  
+      .spinner {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #3498db;
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+      }
+  
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+  
+    const spinnerOverlay = document.createElement('div');
+    spinnerOverlay.className = 'spinner-overlay';
+    spinnerOverlay.innerHTML = '<div class="spinner"></div>';
+  
+    spinnerContainer.appendChild(spinnerStyle);
+    spinnerContainer.appendChild(spinnerOverlay);
+    document.body.appendChild(spinnerContainer);
+  
+    return spinnerContainer;
+  }
+  
+  // 스피너 제거
+  function removeSpinner(spinnerContainer) {
+    if (spinnerContainer && document.body.contains(spinnerContainer)) {
+      document.body.removeChild(spinnerContainer);
+    }
+  }
+
+  console.log("checkOption", optionCnt)
+  const spinnerContainer = injectSpinner();
   if (optionCnt === 2) {
     var checkInterval = setInterval(function () {
       var iframeDoc = iframe.contentWindow.document;
@@ -446,6 +502,7 @@ function checkOption() {
         optionPromises.push(optionEight(crawlResults));
 
         Promise.all(optionPromises).then(() => {
+          console.log("Blog - Promise.all 시작")
           finalResult = processData(tmpData);
           console.log(finalResult);
           Object.keys(finalResult).forEach((id) => {
@@ -471,14 +528,19 @@ function checkOption() {
               } else {
                 element.style.backgroundColor = "rgba(241, 43, 67, 0.3)"; // Red for bad options
               }
-
               element.innerHTML = html;
             }
           });
+        }).catch(error => {
+          removeSpinner(spinnerContainer)
+        }).finally(() => {
+          console.log("Blog - Promise.all 종료")
+          removeSpinner(spinnerContainer)
         });
       }
     }, 100);
   }
+  removeSpinner(spinnerContainer)
 }
 
 function showModal(iframeDoc, id, event) {
