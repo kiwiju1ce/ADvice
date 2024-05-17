@@ -1,15 +1,11 @@
-from typing import List
-from services.text_emotion_prediction import TextEmotionPrediction
+from typing import List, Tuple
 from models.exception.custom_exception import CustomException
+from internals.emotion_analyzer import emotionPrediction
 
 
-class EmotionPredictionService:
-    # 초기화
-    def __init__(self):
-        self.__text_emotion_prediction = TextEmotionPrediction()
-
+class EmotionService:
     # 데이터 전처리 이후 감정 예측 수행
-    async def predicts_all(self, data: List[str]):
+    def predict_all(self, data: List[str]):
         # 전처리
         texts = [
             text.replace("\u200B", "")
@@ -17,73 +13,32 @@ class EmotionPredictionService:
         ]
 
         # 예측 시작
-        results = []
-        for text in texts:
-            result = self.__text_emotion_prediction.sentence_predicts(text)
-            results.append({
-                "text": text,
-                "negative_ratio": result[0],
-                "neutral_ratio": result[1],
-                "positive_ratio": result[2]
-            })
-
-        # 반환
-        return results
-
-    # 예측
-    async def __predicts(self, texts):
-        pos_list, neu_list, neg_list = [], [], []
-        for text in texts:
-            result = self.__text_emotion_prediction.sentence_predict(text)
-
-            if result[1] == -1:
-                neg_list.append([text, result[0]])
-            elif result[1] == 0:
-                neu_list.append([text, result[0]])
-            elif result[1] == 1:
-                pos_list.append([text, result[0]])
-            else:
-                raise CustomException(400, "잘못된 모델 설정")
-
-        pos_list = [data[0] for data in sorted(pos_list, key=lambda d: d[1], reverse=True)]
-        neu_list = [data[0] for data in sorted(neu_list, key=lambda d: d[1], reverse=True)]
-        neg_list = [data[0] for data in sorted(neg_list, key=lambda d: d[1], reverse=True)]
-
-        return [neg_list, neu_list, pos_list]
-
-
-    # 데이터 전처리 이후 감정 예측 수행
-    async def predict_all(self, data: List[str]):
-        # 전처리
-        texts = [
-            text.replace("\u200B", "")
-            for text in data
-        ]
-
-        # 예측 시작
-        results = await self.__predict(texts)
+        results = _predict(texts)
 
         # 반환
         keys = ["negative", "neutral", "positive"]
         return dict(zip(keys, results))
 
-    # 예측
-    async def __predict(self, texts):
-        pos_list, neu_list, neg_list = [], [], []
-        for text in texts:
-            result = self.__text_emotion_prediction.sentence_predict(text)
 
-            if result[1] == -1:
-                neg_list.append([text, result[0]])
-            elif result[1] == 0:
-                neu_list.append([text, result[0]])
-            elif result[1] == 1:
-                pos_list.append([text, result[0]])
-            else:
-                raise CustomException(400, "잘못된 모델 설정")
+def _predict(texts) -> List[List[str]]:
+    pos_list, neu_list, neg_list = [], [], []
+    types = emotionPrediction.detect(texts)
 
-        pos_list = [data[0] for data in sorted(pos_list, key=lambda d: d[1], reverse=True)]
-        neu_list = [data[0] for data in sorted(neu_list, key=lambda d: d[1], reverse=True)]
-        neg_list = [data[0] for data in sorted(neg_list, key=lambda d: d[1], reverse=True)]
+    for type, text in zip(types, texts):
+        if type == 0:
+            neg_list.append([text, type])
+        elif type == 1:
+            neu_list.append([text, type])
+        elif type == 2:
+            pos_list.append([text, type])
+        else:
+            raise CustomException(400, "잘못된 모델 설정")
 
-        return [neg_list, neu_list, pos_list]
+    pos_list = [data[0] for data in sorted(pos_list, key=lambda d: d[1], reverse=True)]
+    neu_list = [data[0] for data in sorted(neu_list, key=lambda d: d[1], reverse=True)]
+    neg_list = [data[0] for data in sorted(neg_list, key=lambda d: d[1], reverse=True)]
+
+    return [neg_list, neu_list, pos_list]
+
+
+emotionService = EmotionService()
