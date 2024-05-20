@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  main:
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    container_name: main
+    ports:
+      - 8000:8000
+    networks:
+      - deploy
+  emotion:
+    build:
+      context: ./AI/emotion
+      dockerfile: ./Dockerfile
+    container_name: emotion
+    ports:
+      - 8001:8000
+    networks:
+      - deploy
+  image:
+    build:
+      context: ./AI/image
+      dockerfile: ./Dockerfile
+    container_name: image
+    ports:
+      - 8002:8000
+    networks:
+      - deploy
+  text:
+    build:
+      context: ./AI/text
+      dockerfile: ./Dockerfile
+    container_name: text
+    ports:
+      - 8003:8000
+    networks:
+      - deploy
+
+
+networks:
+  deploy:
+    external: true

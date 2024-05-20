@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+
+    environment {
+        gitlabBranch = 'develop'
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                echo "Branch : ${env.gitlabBranch}"
+                echo "Clone repository"
+                git branch: "${env.gitlabBranch}", url: "https://lab.ssafy.com/s10-final/S10P31A403.git", credentialsId: "juhyun"
+            }
+        }
+
+        stage("Set environment") {
+            steps {
+                echo "Copy require file to pipeline folder"
+                sh 'cp /var/jenkins_home/util/deploy/image/sound-catalyst-421203-3bf1190b292d.json ./AI/image/model/google/'
+                sh 'cp /var/jenkins_home/util/deploy/image/sound-catalyst-421203-3bf1190b292d.json ./AI/text/model/google/'
+                sh 'cp /var/jenkins_home/util/deploy/main/Dockerfile ./backend/'
+                sh 'cp /var/jenkins_home/util/deploy/emotion/Dockerfile ./AI/emotion/'
+                sh 'cp /var/jenkins_home/util/deploy/image/Dockerfile ./AI/image/'
+                sh 'cp /var/jenkins_home/util/deploy/text/Dockerfile ./AI/text/'
+                sh 'cp /var/jenkins_home/util/deploy/main/.env ./backend/'
+                sh 'cp /var/jenkins_home/util/deploy/image/.env ./AI/image/'
+                sh 'cp /var/jenkins_home/util/deploy/text/.env ./AI/text/'
+                sh 'cp /var/jenkins_home/util/deploy/docker-compose.yml .'
+            }
+        }
+
+        stage('Docker down') {
+            steps {
+                echo "Docker compose down"
+                sh "docker-compose -f docker-compose.yml down --rmi all"
+            }
+        }
+
+        stage('Docker build') {
+            steps {
+                echo "docker compose build"
+                sh "docker-compose -f docker-compose.yml build"
+            }
+            post {
+                success {
+                    echo "Success to build"
+                }
+                failure {
+                    echo "Docker build failed. clear unused file"
+                    sh "docker system prune -f"
+                    error 'pipeline aborted'
+                }
+            }
+        }
+
+        stage('Docker up') {
+            steps {
+                echo "docker compose up"
+                sh "docker-compose -f docker-compose.yml up -d"
+            }
+        }
+
+        stage('Docker clear') {
+            steps{
+                sh "docker system prune -f"
+            }
+        }
+    }
+}
