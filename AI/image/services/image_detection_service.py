@@ -7,8 +7,7 @@ from internals.translator import translator
 
 
 class ImageDetectionService:
-    def context_analyze(self, data:tuple[list, list]):
-        image_paths, texts = data
+    def context_analyze(self, image_paths: list, texts: list):
         keywords = keywordExtractor.extract_keyword(texts)
         translated = translator.translate(keywords)
 
@@ -29,8 +28,7 @@ class ImageDetectionService:
                 evaluation.append(2)
         return evaluation
 
-    def human_detection(self, image_paths: tuple):
-        (image_paths,) = image_paths
+    def human_detection(self, image_paths: list):
         counts = 0
         for image_path in image_paths:
             try:
@@ -46,8 +44,7 @@ class ImageDetectionService:
                 return 1
         return -1
 
-    def filter_detection(self, image_paths: tuple):
-        (image_paths, ) = image_paths
+    def filter_detection(self, image_paths: list):
         results = imageAnalyzer.filter_detect(image_paths)
         evaluation = []
         for contrast, edge_strength, laplacian in results:

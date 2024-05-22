@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings
 
 
@@ -11,4 +13,5 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="./model/google/sound-catalyst-421203-3bf1190b292d.json"
 settings = Settings()
