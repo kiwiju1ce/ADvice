@@ -1,8 +1,10 @@
 import asyncio
+import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
 
 from config.config import settings
 
+mp.set_start_method('spawn', force=True)
 executor = ProcessPoolExecutor(max_workers=settings.max_workers)
 
 
@@ -16,7 +18,6 @@ async def process_executor(task, *args):
     # except Exception as e:
     #     print(f"Error in executor.submit: {e}")
     loop = asyncio.get_running_loop()
-    print(loop.is_running())
     loop.set_debug(True)
     print(task)
     try:
