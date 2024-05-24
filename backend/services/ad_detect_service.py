@@ -57,14 +57,22 @@ class AdDetectService:
         return TypeResponse(result=ret)
 
     async def call_text_ad_detection(self, sentences):
-        res = requests.post(
-            url=settings.text_ad_host + "/ad-evaluate", data=json.dumps(sentences)
-        )
-
-        if res.status_code // 100 != 2 or not res.text:
-            return [0 for _ in range(len(sentences))]
-
-        return res.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                    url=settings.text_ad_host + "/ad-evaluate",
+                    json=sentences,
+                        ) as response:
+                if response.status // 100 != 2 or not response.text:
+                    return [0 for _ in range(len(sentences))]
+                return await response.json()
+        # res = requests.post(
+        #     url=settings.text_ad_host + "/ad-evaluate", data=json.dumps(sentences)
+        # )
+        #
+        # if res.status_code // 100 != 2 or not res.text:
+        #     return [0 for _ in range(len(sentences))]
+        #
+        # return res.json()
 
     async def detect_image_ad(self, data):
         paragraphs = detail_service.get_paragraphs(data)
@@ -149,7 +157,7 @@ class AdDetectService:
             if type(sentences) != list or len(sentences) < 1:
                 continue
 
-            tasks.append(self.call_text_ad_detection(sentences))
+            tasks.append(self.call_objective_info(sentences))
 
         results = []
         for prediction in await asyncio.gather(*tasks):
@@ -170,14 +178,22 @@ class AdDetectService:
         return ScoreResponse(result=ret)
 
     async def call_objective_info(self, sentences):
-        res = requests.post(
-            url=settings.text_ad_host + "/info-evaluate", data=json.dumps(sentences)
-        )
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                    url=settings.text_ad_host + "/info-evaluate",
+                    json=sentences,
+                        ) as response:
+                if response.status // 100 != 2 or not response.text:
+                    return [0 for _ in range(len(sentences))]
+                return await response.json()
+        # res = requests.post(
+        #     url=settings.text_ad_host + "/info-evaluate", data=json.dumps(sentences)
+        # )
 
-        if res.status_code // 100 != 2 or not res.text:
-            return [0 for _ in range(len(sentences))]
-
-        return res.json()
+        # if res.status_code // 100 != 2 or not res.text:
+        #     return [0 for _ in range(len(sentences))]
+        #
+        # return res.json()
 
 
 ad_detect_service = AdDetectService()

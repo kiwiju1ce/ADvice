@@ -11,21 +11,20 @@ class TextDetection(ABC):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     @abstractmethod
-    def detect_texts(self, text):
+    def detect_texts(self, text: list):
         pass
 
     @abstractmethod
-    def detect_sentence(self, text):
+    def detect_sentence(self, text: str):
         pass
 
     @abstractmethod
     def run(self, tokenized_sent, model):
         pass
 
-    def evaluate_texts(self, texts, tokenizer, device, model) -> tuple[list, list]:
+    def evaluate_texts(self, texts: list, tokenizer, device, model) -> tuple[list, list]:
         types = []
         percentages = []
-
         for text in texts:
             classification, percentage = self.predict(self.run, text, tokenizer, device, model)
             types.append(classification)
@@ -34,6 +33,7 @@ class TextDetection(ABC):
 
     # run_model은 오버라이딩한 run 메서드가 작동됨
     def predict(self, run_model, sentence, tokenizer, device, model) -> tuple[int, float]:
+        print("after: ", sentence)
         model.eval()
         tokenized_sent = tokenizer(
             sentence,
@@ -76,7 +76,7 @@ class InfoTextDetection(TextDetection):
             .to(self.device))
         self.tokenizer = AutoTokenizer.from_pretrained(settings.pretrained_kobert_tokenizer)
 
-    def detect_texts(self, text) -> tuple[list, list]:
+    def detect_texts(self, text: list) -> tuple[list, list]:
         return super().evaluate_texts(text, self.tokenizer, self.device, self.model)
 
     def detect_sentence(self, text: str):

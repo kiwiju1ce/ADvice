@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    max_workers: int
     ad_detection_model_path: str
     info_detection_model_path: str
     yolo_model_path: str

@@ -5,16 +5,17 @@ from starlette.responses import JSONResponse
 from models.detail_request import DetailRequest
 from models.exception.custom_exception import CustomException
 from services.ad_service import adService
+from services.process_executor import process_executor
 
 text = APIRouter()
 
 
 @text.post("/ad-evaluate")
-def text_ad_evaluate(data: List[str]):
+async def text_ad_evaluate(data: List[str]):
     if not data:
         raise CustomException(422, "No texts provided")
 
-    preds, scores = adService.ad_evaluation(data)
+    preds, scores = await process_executor(adService.ad_evaluation, data)
     return JSONResponse(status_code=200, content=DetailRequest(prediction=preds, score=scores).dict())
 
 

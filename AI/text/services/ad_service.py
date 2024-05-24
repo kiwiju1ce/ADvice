@@ -3,7 +3,8 @@ from internals.text_analyzer import adDetector
 
 
 class AdService:
-    def ad_evaluation(self, texts: list) -> tuple[list, list]:
+    def ad_evaluation(self, texts: tuple[list]) -> tuple[list, list]:
+        texts = texts[0]
         return adDetector.detect_texts(texts)
 
     def ad_evaluation_shortcut(self, texts: list, image_paths: str) -> bool:
