@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import torch
 from abc import ABC, abstractmethod
@@ -23,6 +25,7 @@ class TextDetection(ABC):
         pass
 
     def evaluate_texts(self, texts: list, tokenizer, device, model) -> tuple[list, list]:
+        logging.info(f'{self.__class__} :  {type(texts)}')
         types = []
         percentages = []
         for text in texts:
