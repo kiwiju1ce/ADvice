@@ -46,13 +46,14 @@ class TextDetection(ABC):
             add_special_tokens=True,
             max_length=128
         )
-
+        logging.info(f'{self.__class__} parameter ')
         tokenized_sent.to(device)
-
+        logging.info(f'{self.__class__} device : {device}')
         outputs = run_model(tokenized_sent, model)
 
         logits = outputs[0]
         logits = logits.detach().cpu()
+        logging.info(f'{self.__class__} logits :  {logits}')
         return self._get_class_percentage(logits)
 
     def _get_class_percentage(self, logit: np.array):
@@ -88,11 +89,13 @@ class InfoTextDetection(TextDetection):
         pass
 
     def run(self, tokenized_sent, model):
+        logging.info(f'{self.__class__} run before :  {tokenized_sent}')
         with torch.no_grad():
             outputs = model(
                 input_ids=tokenized_sent["input_ids"],
                 attention_mask=tokenized_sent["attention_mask"]
             )
+        logging.info(f'{self.__class__} run after :  {model}')
         return outputs
 
 
