@@ -1,3 +1,5 @@
+import sys
+
 from pydantic_settings import BaseSettings
 
 
@@ -14,4 +16,7 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 settings = Settings()
