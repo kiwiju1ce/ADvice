@@ -90,11 +90,15 @@ class InfoTextDetection(TextDetection):
 
     def run(self, tokenized_sent, model):
         logging.info(f'{self.__class__} run before :  {tokenized_sent}')
-        with torch.no_grad():
-            outputs = model(
-                input_ids=tokenized_sent["input_ids"],
-                attention_mask=tokenized_sent["attention_mask"]
-            )
+        try:
+            with torch.no_grad():
+                logging.info(f'{self.__class__} torch.no_grad()')
+                outputs = model(
+                    input_ids=tokenized_sent["input_ids"],
+                    attention_mask=tokenized_sent["attention_mask"]
+                )
+        except Exception as e:
+            logging.info(f'{self.__class__} run :  {type(e)} , {e}')
         logging.info(f'{self.__class__} run after :  {model}')
         return outputs
 
