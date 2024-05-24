@@ -25,18 +25,19 @@ class TextDetection(ABC):
         pass
 
     def evaluate_texts(self, texts: list, tokenizer, device, model) -> tuple[list, list]:
-        logging.info(f'{self.__class__} :  {type(texts)}')
+        logging.info(f'{self.__class__} evaluate before :  {texts}')
         types = []
         percentages = []
         for text in texts:
             classification, percentage = self.predict(self.run, text, tokenizer, device, model)
             types.append(classification)
             percentages.append(percentage)
+        logging.info(f'{self.__class__} evaluate after :  {type(types)} , {type(percentages)}')
         return types, percentages
 
     # run_model은 오버라이딩한 run 메서드가 작동됨
     def predict(self, run_model, sentence, tokenizer, device, model) -> tuple[int, float]:
-        print("after: ", sentence)
+        logging.info(f'{self.__class__} predict :  {sentence}')
         model.eval()
         tokenized_sent = tokenizer(
             sentence,
@@ -80,6 +81,7 @@ class InfoTextDetection(TextDetection):
         self.tokenizer = AutoTokenizer.from_pretrained(settings.pretrained_kobert_tokenizer)
 
     def detect_texts(self, text: list) -> tuple[list, list]:
+        logging.info(f'{self.__class__} detect_texts :  {len(text)}')
         return super().evaluate_texts(text, self.tokenizer, self.device, self.model)
 
     def detect_sentence(self, text: str):
