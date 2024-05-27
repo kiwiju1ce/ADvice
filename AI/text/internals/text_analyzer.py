@@ -91,7 +91,7 @@ class InfoTextDetection(TextDetection):
                     attention_mask=tokenized_sent["attention_mask"]
                 )
         except Exception as e:
-            logging.error(f'Error in {self.__class__} run : , {e}')
+            logging.error(f'{self.__class__} run : , {e}')
         return outputs
 
 

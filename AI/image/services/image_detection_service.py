@@ -30,24 +30,23 @@ class ImageDetectionService:
                 evaluation.append(2)
         return evaluation
 
-    def human_detection(self, image_paths: list) -> int:
+    def human_detection(self, image_paths: tuple[list]) -> int:
         counts = 0
+        image_paths = image_paths[0]
         for image_path in image_paths:
             try:
                 counts += humanCounter.count_objects_in_images([image_path], 0)[0]
             except Exception as e:
-                logging.error(f"Error in human detection: {e}")
-                pass
+                logging.error(f"human_detection: {e}")
 
-        if counts > 0:
-            ratio = counts / len(image_paths)
-            if ratio > 0.2:
-                return 0
-            else:
-                return 1
-        return -1
+        ratio = counts / len(image_paths)
+        if ratio > 0.2:
+            return 0
+        else:
+            return 1
 
-    def filter_detection(self, image_paths: list) -> list:
+    def filter_detection(self, image_paths: tuple[list]) -> list:
+        image_paths = image_paths[0]
         results = imageAnalyzer.filter_detect(image_paths)
         evaluation = []
         for contrast, edge_strength, laplacian in results:

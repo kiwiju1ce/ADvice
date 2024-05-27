@@ -22,7 +22,7 @@ class ImageAdDetection:
                     if flag == 1:
                         return True
             except CustomException as e:
-                logging.error(f"Error in image_downloader: {e}")
+                logging.error(f"image_downloader: {e}")
                 pass
         return False
 

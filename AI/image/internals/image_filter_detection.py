@@ -20,7 +20,7 @@ class ImageAnalyzer:
             try:
                 contrast, edge_strength, laplacian_var = self.calculate_filter_value(url)
             except urllib.error.HTTPError as e:
-                logging.error(f"Error in image_downloader: {e}")
+                logging.error(f"image_downloader: {e}")
                 results.append([None, None, None])
                 continue
 

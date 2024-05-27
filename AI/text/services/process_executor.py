@@ -16,5 +16,5 @@ async def process_executor(task, *args):
         result = await loop.run_in_executor(executor, task, args)
         return result
     except Exception as e:
-        logging.error(f"Error in run_in_executor: {e}")
+        logging.error(f"run_in_executor: {e}")
         raise CustomException(500, "서버에 치명적 오류가 발생했습니다.")
