@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import torch
 from abc import ABC, abstractmethod
@@ -11,21 +13,20 @@ class TextDetection(ABC):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     @abstractmethod
-    def detect_texts(self, text):
-        pass
+    def detect_texts(self, text: list):
+        raise NotImplementedError
 
     @abstractmethod
-    def detect_sentence(self, text):
-        pass
+    def detect_sentence(self, text: str):
+        raise NotImplementedError
 
     @abstractmethod
     def run(self, tokenized_sent, model):
-        pass
+        raise NotImplementedError
 
-    def evaluate_texts(self, texts, tokenizer, device, model) -> tuple[list, list]:
+    def evaluate_texts(self, texts: list, tokenizer, device, model) -> tuple[list, list]:
         types = []
         percentages = []
-
         for text in texts:
             classification, percentage = self.predict(self.run, text, tokenizer, device, model)
             types.append(classification)
@@ -76,18 +77,21 @@ class InfoTextDetection(TextDetection):
             .to(self.device))
         self.tokenizer = AutoTokenizer.from_pretrained(settings.pretrained_kobert_tokenizer)
 
-    def detect_texts(self, text) -> tuple[list, list]:
+    def detect_texts(self, text: list) -> tuple[list, list]:
         return super().evaluate_texts(text, self.tokenizer, self.device, self.model)
 
     def detect_sentence(self, text: str):
         pass
 
     def run(self, tokenized_sent, model):
-        with torch.no_grad():
-            outputs = model(
-                input_ids=tokenized_sent["input_ids"],
-                attention_mask=tokenized_sent["attention_mask"]
-            )
+        try:
+            with torch.no_grad():
+                outputs = model(
+                    input_ids=tokenized_sent["input_ids"],
+                    attention_mask=tokenized_sent["attention_mask"]
+                )
+        except Exception as e:
+            logging.error(f'{self.__class__} run : , {e}')
         return outputs
 
 

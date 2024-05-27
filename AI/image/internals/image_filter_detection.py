@@ -1,3 +1,5 @@
+import logging
+
 import cv2
 import numpy as np
 import urllib.error
@@ -17,14 +19,14 @@ class ImageAnalyzer:
         for url in urls:
             try:
                 contrast, edge_strength, laplacian_var = self.calculate_filter_value(url)
-            except urllib.error.HTTPError:
+            except urllib.error.HTTPError as e:
+                logging.error(f"image_downloader: {e}")
                 results.append([None, None, None])
                 continue
 
             contrast_evaluation = self.evaluate(self.contrast_mean, contrast)
             edge_strength_evaluation = self.evaluate(self.edge_strength_mean, edge_strength)
             laplacian_var_evaluation = self.evaluate(self.laplacian_var_mean, laplacian_var)
-            print(url[-10:], " filter score : ", contrast_evaluation, edge_strength_evaluation, laplacian_var_evaluation)
             results.append([contrast_evaluation, edge_strength_evaluation, laplacian_var_evaluation])
         return results
 
@@ -55,9 +57,9 @@ class ImageAnalyzer:
         return np.std(image)
 
     def _calculate_edge_strength(self, image: np.ndarray) -> float:
-        sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)
-        sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)
-        sobel = np.sqrt(sobelx**2 + sobely**2)
+        sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)
+        sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)
+        sobel = np.sqrt(sobel_x**2 + sobel_y**2)
         return np.mean(sobel)
 
     def _get_laplacian_var(self, gray_image: np.ndarray) -> float:

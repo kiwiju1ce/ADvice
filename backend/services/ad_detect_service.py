@@ -1,11 +1,13 @@
 import requests
 import json
 import asyncio
+import aiohttp
 
 from config.config import settings
 from models.detail_request import DetailRequest
 from models.detail_response import Type, TypeResponse, Score, ScoreResponse
 from internals.detail_service import detail_service
+from models.exception.custom_exception import CustomException
 
 
 class AdDetectService:
@@ -55,14 +57,22 @@ class AdDetectService:
         return TypeResponse(result=ret)
 
     async def call_text_ad_detection(self, sentences):
-        res = requests.post(
-            url=settings.text_ad_host + "/ad-evaluate", data=json.dumps(sentences)
-        )
-
-        if res.status_code // 100 != 2 or not res.text:
-            return [0 for _ in range(len(sentences))]
-
-        return res.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                    url=settings.text_ad_host + "/ad-evaluate",
+                    json=sentences,
+                        ) as response:
+                if response.status // 100 != 2 or not response.text:
+                    return [0 for _ in range(len(sentences))]
+                return await response.json()
+        # res = requests.post(
+        #     url=settings.text_ad_host + "/ad-evaluate", data=json.dumps(sentences)
+        # )
+        #
+        # if res.status_code // 100 != 2 or not res.text:
+        #     return [0 for _ in range(len(sentences))]
+        #
+        # return res.json()
 
     async def detect_image_ad(self, data):
         paragraphs = detail_service.get_paragraphs(data)
@@ -70,13 +80,11 @@ class AdDetectService:
 
         sentence = detail_service.get_sentence(text)
         image_tag, images = detail_service.get_images(data)
-
         tasks = [
-            self.call_context_detection(images, sentence),
             self.call_filter_detection(images),
             self.call_human_detection(images),
+            self.call_context_detection(images, sentence),
         ]
-
         score = [0 for _ in range(len(images))]
         results = await asyncio.gather(*tasks)
 
@@ -98,22 +106,46 @@ class AdDetectService:
         ]
 
     async def call_context_detection(self, images, sentences):
-        return requests.post(
-            url=settings.image_ad_host + "/context-detection",
-            json={"path": images, "text": sentences},
-        ).json()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                    url=settings.image_ad_host + "/context-detection",
+                    json={"path": images, "text": sentences},
+                        ) as response:
+                if response.status != 200:
+                    raise CustomException(400, "이미지 로드 중 문제가 발생했습니다")
+                return await response.read()
+        # return requests.post(
+        #     url=settings.image_ad_host + "/context-detection",
+        #     json={"path": images, "text": sentences},
+        # ).json()
 
     async def call_filter_detection(self, images):
-        return requests.post(
-            url=settings.image_ad_host + "/filter-detection",
-            json=images,
-        ).json()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                    url=settings.image_ad_host + "/filter-detection",
+                    json=images,
+                        ) as response:
+                if response.status != 200:
+                    raise CustomException(400, "이미지 로드 중 문제가 발생했습니다")
+                return await response.read()
+        # return requests.post(
+        #     url=settings.image_ad_host + "/filter-detection",
+        #     json=images,
+        # ).json()
 
     async def call_human_detection(self, images):
-        return requests.post(
-            url=settings.image_ad_host + "/human-detection",
-            json=images,
-        ).json()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                    url=settings.image_ad_host + "/human-detection",
+                    json=images,
+                        ) as response:
+                if response.status != 200:
+                    raise CustomException(400, "이미지 로드 중 문제가 발생했습니다")
+                return await response.read()
+        # return requests.post(
+        #     url=settings.image_ad_host + "/human-detection",
+        #     json=images,
+        # ).json()
 
     async def is_objective_info(self, data: DetailRequest):
         paragraphs = detail_service.get_paragraphs(data)
@@ -125,7 +157,7 @@ class AdDetectService:
             if type(sentences) != list or len(sentences) < 1:
                 continue
 
-            tasks.append(self.call_text_ad_detection(sentences))
+            tasks.append(self.call_objective_info(sentences))
 
         results = []
         for prediction in await asyncio.gather(*tasks):
@@ -146,14 +178,22 @@ class AdDetectService:
         return ScoreResponse(result=ret)
 
     async def call_objective_info(self, sentences):
-        res = requests.post(
-            url=settings.text_ad_host + "/info-evaluate", data=json.dumps(sentences)
-        )
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                    url=settings.text_ad_host + "/info-evaluate",
+                    json=sentences,
+                        ) as response:
+                if response.status // 100 != 2 or not response.text:
+                    return [0 for _ in range(len(sentences))]
+                return await response.json()
+        # res = requests.post(
+        #     url=settings.text_ad_host + "/info-evaluate", data=json.dumps(sentences)
+        # )
 
-        if res.status_code // 100 != 2 or not res.text:
-            return [0 for _ in range(len(sentences))]
-
-        return res.json()
+        # if res.status_code // 100 != 2 or not res.text:
+        #     return [0 for _ in range(len(sentences))]
+        #
+        # return res.json()
 
 
 ad_detect_service = AdDetectService()

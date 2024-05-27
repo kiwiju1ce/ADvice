@@ -1,3 +1,5 @@
+import logging
+
 from google.cloud import vision
 
 from config.config import settings
@@ -19,7 +21,8 @@ class ImageAdDetection:
                     flag, _ = adDetector.detect_sentence(texts)
                     if flag == 1:
                         return True
-            except CustomException:
+            except CustomException as e:
+                logging.error(f"image_downloader: {e}")
                 pass
         return False
 
