@@ -7,8 +7,9 @@ class AdService:
         texts = texts[0]
         return adDetector.detect_texts(texts)
 
-    def ad_evaluation_shortcut(self, texts: list, image_paths: str) -> bool:
-        text_results, _ = self.ad_evaluation(texts)
+    def ad_evaluation_shortcut(self, data: tuple[list, list]) -> bool:
+        texts, image_paths = data
+        text_results, _ = adDetector.detect_texts(texts)
         for result in text_results:
             if result == 1:
                 return True

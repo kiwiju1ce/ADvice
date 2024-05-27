@@ -14,30 +14,27 @@ class TextDetection(ABC):
 
     @abstractmethod
     def detect_texts(self, text: list):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def detect_sentence(self, text: str):
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def run(self, tokenized_sent, model):
-        pass
+        raise NotImplementedError
 
     def evaluate_texts(self, texts: list, tokenizer, device, model) -> tuple[list, list]:
-        logging.info(f'{self.__class__} evaluate before :  {texts}')
         types = []
         percentages = []
         for text in texts:
             classification, percentage = self.predict(self.run, text, tokenizer, device, model)
             types.append(classification)
             percentages.append(percentage)
-        logging.info(f'{self.__class__} evaluate after :  {type(types)} , {type(percentages)}')
         return types, percentages
 
     # run_model은 오버라이딩한 run 메서드가 작동됨
     def predict(self, run_model, sentence, tokenizer, device, model) -> tuple[int, float]:
-        logging.info(f'{self.__class__} predict :  {sentence}')
         model.eval()
         tokenized_sent = tokenizer(
             sentence,
@@ -46,14 +43,13 @@ class TextDetection(ABC):
             add_special_tokens=True,
             max_length=128
         )
-        logging.info(f'{self.__class__} parameter ')
+
         tokenized_sent.to(device)
-        logging.info(f'{self.__class__} device : {device}')
+
         outputs = run_model(tokenized_sent, model)
 
         logits = outputs[0]
         logits = logits.detach().cpu()
-        logging.info(f'{self.__class__} logits :  {logits}')
         return self._get_class_percentage(logits)
 
     def _get_class_percentage(self, logit: np.array):
@@ -82,24 +78,20 @@ class InfoTextDetection(TextDetection):
         self.tokenizer = AutoTokenizer.from_pretrained(settings.pretrained_kobert_tokenizer)
 
     def detect_texts(self, text: list) -> tuple[list, list]:
-        logging.info(f'{self.__class__} detect_texts :  {len(text)}')
         return super().evaluate_texts(text, self.tokenizer, self.device, self.model)
 
     def detect_sentence(self, text: str):
         pass
 
     def run(self, tokenized_sent, model):
-        logging.info(f'{self.__class__} run before :  {tokenized_sent}')
         try:
             with torch.no_grad():
-                logging.info(f'{self.__class__} torch.no_grad()')
                 outputs = model(
                     input_ids=tokenized_sent["input_ids"],
                     attention_mask=tokenized_sent["attention_mask"]
                 )
         except Exception as e:
-            logging.info(f'{self.__class__} run :  {type(e)} , {e}')
-        logging.info(f'{self.__class__} run after :  {model}')
+            logging.error(f'Error in {self.__class__} run : , {e}')
         return outputs
 
 

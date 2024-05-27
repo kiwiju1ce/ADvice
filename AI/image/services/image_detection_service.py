@@ -1,3 +1,5 @@
+import logging
+
 from internals.context_analyzer import contextAnalyzer
 from internals.image_context_extractor import contextExtractor
 from internals.image_filter_detection import imageAnalyzer
@@ -7,7 +9,8 @@ from internals.translator import translator
 
 
 class ImageDetectionService:
-    def context_analyze(self, image_paths: list, texts: list):
+    def context_analyze(self, data: tuple[list, list]) -> list:
+        image_paths, texts = data
         keywords = keywordExtractor.extract_keyword(texts)
         translated = translator.translate(keywords)
 
@@ -19,7 +22,6 @@ class ImageDetectionService:
             for similarity in result:
                 score += max(similarity)
 
-            print(image_path[-10:], " context score : ", score)
             if score > 3:
                 evaluation.append(0)
             elif score > 1:
@@ -28,12 +30,13 @@ class ImageDetectionService:
                 evaluation.append(2)
         return evaluation
 
-    def human_detection(self, image_paths: list):
+    def human_detection(self, image_paths: list) -> int:
         counts = 0
         for image_path in image_paths:
             try:
                 counts += humanCounter.count_objects_in_images([image_path], 0)[0]
-            except Exception:
+            except Exception as e:
+                logging.error(f"Error in human detection: {e}")
                 pass
 
         if counts > 0:
@@ -44,7 +47,7 @@ class ImageDetectionService:
                 return 1
         return -1
 
-    def filter_detection(self, image_paths: list):
+    def filter_detection(self, image_paths: list) -> list:
         results = imageAnalyzer.filter_detect(image_paths)
         evaluation = []
         for contrast, edge_strength, laplacian in results:
